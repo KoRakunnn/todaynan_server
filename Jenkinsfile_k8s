@@ -63,7 +63,15 @@ pipeline {
 
         stage('Deploy to K8s cluster') {
             steps {
-                    sh 'kubectl apply -f /var/jenkins_home/deployment.yaml'
+                    // Deployments를 적용하기 전에 모든 Pod를 삭제하여 최신 이미지를 가져오도록 설정
+
+                                       sh 'kubectl delete pod -l app=spring-app'
+
+                                        // Deployment 적용
+                                        sh 'kubectl apply -f /var/jenkins_home/deployment.yaml'
+
+                                        // Deployment 상태 확인
+                                        sh 'kubectl rollout status deployment/spring-app'
                 }
 
         }
