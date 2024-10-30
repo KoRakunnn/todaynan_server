@@ -59,7 +59,7 @@ public class SearchRestController {
             @RequestParam(name = "searchString") String searchString,
             @RequestParam(name = "pageToken", required = false) String pageToken) throws IOException {
         String givenToken = tokenService.getJwtFromHeader(httpServletRequest);
-        String email = tokenService.getUid(givenToken);
+        String email = tokenService.getUid(givenToken);//1
 
         Optional<User> user = userRepository.findByEmail(email);
 
