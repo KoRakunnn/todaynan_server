@@ -127,8 +127,11 @@ public class PostCommandService implements PostCommandServiceImpl{
                         postComment.getUser().getMyPet(),
                         postComment.getComment(),
                         postComment.getPostCommentLikes().size(),
-                        postComment.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))
-                ))
+                        postComment.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
+                        postComment.getBundleId(),
+                        postComment.getDepth(),
+                        postComment.getParentComment().getId())
+                )
                 .collect(Collectors.toList());
 
         PostResponseDTO.PostDetailResultDTO postDetailResultDTO = toPostDetailResultDTO(post, post_like_cnt, post_comments);
@@ -179,5 +182,8 @@ public class PostCommandService implements PostCommandServiceImpl{
         private String content;
         private Integer post_comment_like_cnt;
         private String createdAt;
+        private Long bundleId;
+        private Long depth;
+        private Long parentId;
     }
 }
