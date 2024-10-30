@@ -130,7 +130,7 @@ public class PostCommandService implements PostCommandServiceImpl{
                         postComment.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
                         postComment.getBundleId(),
                         postComment.getDepth(),
-                        postComment.getParentComment().getId())
+                        postComment.getParentComment() != null ? postComment.getParentComment().getId() : null)
                 )
                 .collect(Collectors.toList());
 
