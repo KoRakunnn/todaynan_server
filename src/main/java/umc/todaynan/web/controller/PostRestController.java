@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import umc.todaynan.domain.entity.Post.PostComment.PostComment;
 import umc.todaynan.domain.entity.Post.PostCommentLike.PostCommentLike;
 import umc.todaynan.domain.entity.Post.PostLike.PostLike;
 import umc.todaynan.domain.entity.User.User.User;
+import umc.todaynan.domain.enums.LoginType;
 import umc.todaynan.oauth2.TokenService;
 import umc.todaynan.repository.UserRepository;
 import umc.todaynan.service.PostCommentService.PostCommentCommandService;
@@ -36,11 +38,8 @@ import java.util.Optional;
 @RequestMapping("/post")
 @RequiredArgsConstructor
 public class PostRestController {
-    @Autowired
     private final PostCommandService postCommandService;
-    @Autowired
     private final PostCommentCommandService postCommentCommandService;
-
     private final PostQueryService postQueryService;
     private final UserRepository userRepository;
     private final TokenService tokenService;
@@ -194,9 +193,10 @@ public class PostRestController {
     })
     @PostMapping("/comment/{post_id}")
     public ApiResponse<PostResponseDTO.CreatePostCommentResultDTO> createPostComment(@PathVariable("post_id") Long post_id,
+                                                                                     @RequestParam(name = "comment_id", required = false) Long comment_id,
                                                                                  @RequestBody PostRequestDTO.CreatePostCommentDTO request,
                                                                                  HttpServletRequest httpServletRequest){
-        PostComment postComment = postCommentCommandService.createComment(post_id, request, httpServletRequest);
+        PostComment postComment = postCommentCommandService.createComment(post_id, comment_id, request, httpServletRequest);
         return ApiResponse.of(SuccessStatus.POST_COMMENT_CREATED, PostCommentConverter.toCreateResultDTO(postComment));
     }
 

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import umc.todaynan.domain.common.DateBaseEntity;
 import umc.todaynan.domain.entity.Post.PostComment.PostComment;
-import umc.todaynan.domain.entity.Post.PostCommentComment.PostCommentComment;
 import umc.todaynan.domain.entity.Post.PostLike.PostLike;
 import umc.todaynan.domain.entity.User.User.User;
 import umc.todaynan.domain.entity.User.UserPrefer.UserPrefer;
@@ -46,7 +45,5 @@ public class Post extends DateBaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<PostComment> postCommentList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
-    private List<PostCommentComment> postCommentCommentList = new ArrayList<>();
 
 }

@@ -14,8 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserPreferCommandServiceImpl implements UserPreferCommandService {
     private final UserPreferQueryDslRepository userPreferQueryDslRepository;
-
-
     @Override
     public void changeMyInterset(long userId, List<Integer> Interests) {
         userPreferQueryDslRepository.changePreferList(userId, Interests);

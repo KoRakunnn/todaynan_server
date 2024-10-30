@@ -126,7 +126,7 @@ public class PostCommandService implements PostCommandServiceImpl{
                         postComment.getUser().getNickName(),
                         postComment.getUser().getMyPet(),
                         postComment.getComment(),
-                        postComment.getPostCommentLikeList().size(),
+                        postComment.getPostCommentLikes().size(),
                         postComment.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))
                 ))
                 .collect(Collectors.toList());

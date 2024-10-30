@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import umc.todaynan.domain.common.DateBaseEntity;
 import umc.todaynan.domain.entity.Post.Post.Post;
-import umc.todaynan.domain.entity.Post.PostCommentComment.PostCommentComment;
 import umc.todaynan.domain.entity.Post.PostCommentLike.PostCommentLike;
 import umc.todaynan.domain.entity.User.User.User;
 
@@ -16,6 +15,7 @@ import java.util.List;
 @Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "post_comment", indexes = @Index(name = "idx_bundle_id", columnList = "bundle_id"))
 @AllArgsConstructor
 public class PostComment extends DateBaseEntity {
     @Id
@@ -30,12 +30,22 @@ public class PostComment extends DateBaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false)
+    private Long depth;
+
+    @Column(nullable = false)
+    private Long bundleId;
+
     @Column(nullable = false, length = 200)
     private String comment;
 
-    @OneToMany(mappedBy = "postComment", cascade = CascadeType.ALL)
-    private List<PostCommentLike> postCommentLikeList = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private PostComment parentComment;
+
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
+    private List<PostComment> childComments = new ArrayList<>();
 
     @OneToMany(mappedBy = "postComment", cascade = CascadeType.ALL)
-    private List<PostCommentComment> postCommentCommentList = new ArrayList<>();
+    private List<PostCommentLike> postCommentLikes = new ArrayList<>();
 }

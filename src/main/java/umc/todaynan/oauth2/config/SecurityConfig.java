@@ -41,9 +41,6 @@ public class SecurityConfig {
     private final TokenService tokenService;
     private final UserRepository userRepository;
     private final UserConverter userConverter;
-    private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomOidcUserService customOidcUserService;
     @Bean
     SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -57,14 +54,6 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new CustomAuthenticationEntryPoint())) // Use custom entry point
                 .addFilterBefore(new JwtAuthFilter(tokenService, userRepository,userConverter), UsernamePasswordAuthenticationFilter.class)
-
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/token/expired")
-                        .permitAll()
-                        .successHandler(oAuth2SuccessHandler)
-                        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
-                                .userService(customOAuth2UserService)
-                                .oidcUserService(customOidcUserService)))
 
                 .logout(logout -> logout
                         .logoutSuccessUrl("/logout"))

@@ -50,11 +50,21 @@ public class PostCommentCommandService implements PostCommentCommandServiceImpl 
     * 4. PostComment 저장
     * */
     @Override
-    public PostComment createComment(Long post_id, PostRequestDTO.CreatePostCommentDTO request, HttpServletRequest httpServletRequest) {
+    public PostComment createComment(Long post_id, Long comment_id, PostRequestDTO.CreatePostCommentDTO request, HttpServletRequest httpServletRequest) {
         User user = findUser(httpServletRequest);
-//        Post post = findPost(post_id, user);
-        PostComment postComment = PostCommentConverter.toPostComment(request);
         Post post = postRepository.findById(post_id).orElseThrow(() -> new PostNotFoundException("post not found"));;
+        PostComment postComment;
+        Integer maxBundleId = postCommentRepository.findMaxBundleId().orElse(null);
+        if (comment_id ==null) { //최초댓글
+            postComment = PostCommentConverter.toPostComment(request, maxBundleId, post, user);
+        }else {
+            Optional<PostComment> parentPostComment = postCommentRepository.findById(comment_id);
+            if(parentPostComment.isPresent()) {
+                postComment = PostCommentConverter.toPostChildComment(request, post, user, parentPostComment.get());
+            }else {
+                throw new  PostNotFoundException("post not found");
+            }
+        }
         postComment.setPost(post);
         postComment.setUser(user);
         return postCommentRepository.save(postComment);
@@ -83,7 +93,6 @@ public class PostCommentCommandService implements PostCommentCommandServiceImpl 
      * */
     @Override
     public Boolean deleteComment(Long post_id, Long comment_id, HttpServletRequest httpServletRequest) {
-        User user = findUser(httpServletRequest);
         postCommentRepository.deleteById(comment_id);
         return true;
     }

@@ -3,6 +3,7 @@ package umc.todaynan.web.dto.UserDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Builder;
 import lombok.Getter;
 import umc.todaynan.domain.enums.LoginType;
 import umc.todaynan.domain.enums.MyPet;
@@ -11,6 +12,7 @@ import umc.todaynan.domain.enums.PlaceCategory;
 import java.util.List;
 
 public class UserRequestDTO {
+    @Builder
     @Getter
     public static class JoinUserRequestDTO {
         String nickName;
@@ -34,6 +36,7 @@ public class UserRequestDTO {
     }
 
 
+    @Builder
     @Getter
     public static class UserGeneralRequestDTO {
         String request;

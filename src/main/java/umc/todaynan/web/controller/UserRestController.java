@@ -47,7 +47,6 @@ public class UserRestController {
     private final UserPreferCommandService userPreferCommandService;
     private final UserBlockingCommandService userBlockingCommandService;
     private final PostQueryService postQueryService;
-
     private final UserRepository userRepository;
 
     /**
@@ -121,7 +120,6 @@ public class UserRestController {
     @Operation(summary = "자동 로그인 API", description = "User Jwt Authorization")
     @GetMapping("/auto-login/")
     public ApiResponse<UserResponseDTO.AutoLoginResponseDTO> autoLogin(HttpServletRequest httpServletRequest) {
-        String df = "asdㅁㄴㅇㄹㅁㄴㅇf";
         return ApiResponse.of(SuccessStatus.USER_LOGIN, userService.autoLoginUser(httpServletRequest));
     }
 

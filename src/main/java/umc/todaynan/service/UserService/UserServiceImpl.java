@@ -48,7 +48,6 @@ public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final UserLikeRepository userLikeRepository;
     private final UserPreferRepository userPreferRepository;
-    private final PostCommentCommentRepository postCommentCommentRepository;
     private final PostCommentRepository postCommentRepository;
     private final PostRepository postRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -84,22 +83,11 @@ public class UserServiceImpl implements UserService{
         }
         User newUser = UserConverter.toUserDTO(joinUserDTO, email, loginType);
 
-        List<PreferCategory> preferCategoryList = joinUserDTO.getPreferCategory().stream()
-                .map(category -> preferCategoryRepository.findById(category)
-                        .orElseThrow(() -> new GeneralException(ErrorStatus.PREFER_CATEGORY_NOT_FOUND))
-                )
-                .collect(Collectors.toList());
-
-
+        List<PreferCategory> preferCategoryList = preferCategoryRepository.findAllById(joinUserDTO.getPreferCategory());
         List<UserPrefer> userPreferList = UserPreferConverter.toUserPreferCategoryList(preferCategoryList);
 
-
         userPreferList.forEach(userPrefer -> {userPrefer.setUser(newUser);});
-
-        logger.debug("PreferCategory list created: {}", newUser.getUserPreferList());
-
         return userRepository.save(newUser);
-
     }
 
     @Override
@@ -249,9 +237,9 @@ public class UserServiceImpl implements UserService{
 
 
     public Page<Post> getUserPostListByUserIdByUserIdAndComments(long userId, PageRequest pageRequest) {
-        List<Long> postIdsByUserIdOnCommentComment = postCommentCommentRepository.findPostIdsByUserId(userId);
+        List<Long> postIdsByUserIdOnCommentComment = null;
         List<Long> postIdsByUserIdOnComment = postCommentRepository.findPostIdsByUserId(userId);
-        Set<Long> merged = new HashSet<>(postIdsByUserIdOnCommentComment);
+        Set<Long> merged = null;
         merged.addAll(postIdsByUserIdOnComment);
         List<Post> posts = postRepository.findAllById(merged);
         long total = posts.size();

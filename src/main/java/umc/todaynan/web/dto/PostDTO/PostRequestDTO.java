@@ -1,11 +1,13 @@
 package umc.todaynan.web.dto.PostDTO;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Getter;
 import umc.todaynan.domain.enums.PostCategory;
 
 
 public class PostRequestDTO {
+    @Builder
     @Getter
     public static class CreatePostDTO{
         @NotBlank

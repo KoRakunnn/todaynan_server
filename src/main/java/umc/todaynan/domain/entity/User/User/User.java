@@ -7,8 +7,6 @@ import umc.todaynan.domain.entity.Chat.Chat;
 import umc.todaynan.domain.entity.Chat.ChatRoom;
 import umc.todaynan.domain.entity.Post.Post.Post;
 import umc.todaynan.domain.entity.Post.PostComment.PostComment;
-import umc.todaynan.domain.entity.Post.PostCommentComment.PostCommentComment;
-import umc.todaynan.domain.entity.Post.PostCommentCommentLike.PostCommentCommentLike;
 import umc.todaynan.domain.entity.Post.PostCommentLike.PostCommentLike;
 import umc.todaynan.domain.entity.Post.PostLike.PostLike;
 import umc.todaynan.domain.entity.User.UserBlocking.UserBlocking;
@@ -83,9 +81,4 @@ public class User extends DateBaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<PostCommentLike> postCommentLikeList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<PostCommentComment> postCommentCommentList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<PostCommentCommentLike> postCommentCommentLikeList = new ArrayList<>();
 }
