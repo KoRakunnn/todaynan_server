@@ -30,7 +30,7 @@
 
 ## ERD
 
-<img width="1168" alt="스크린샷 2024-07-11 오후 2 25 10" src="https://github.com/user-attachments/assets/360a965c-3907-4573-a24d-056d860c9cb8">
+<img width="513" alt="erd" src="https://github.com/user-attachments/assets/649b2d09-6fa6-4cbe-8549-9592aa05c7d4">
 
 ## 아키텍처
 
@@ -47,11 +47,11 @@
   * Signup, Login API
   * Search API
     
-## 성과 및 결과
-- 기존에 진행한 프로젝트에서 여러가지 기술을 도입하여 보다 완성도 있는 서비스를 개발.
-- Kubernetes 도입으로 서비스 확장성과 안정성을 강화하여, 트래픽 급증 시에도 무중단 운영이 가능하도록 자동화된 스케일링 환경을 구축.
-- Prometheus와 Grafana를 활용한 실시간 모니터링 도입으로 서비스 가동률을 99.9%로 유지.
+## 성과 및 개선 결과
+- Kubernetes 도입으로 서비스 확장성과 안정성을 강화하여, 트래픽 급증 시에도 무중단 운영이 가능하도록 자동화된 스케일링 환경을 구축
+- Prometheus와 Grafana를 활용한 실시간 모니터링 도입으로 서비스 가동률을 99.9%로 유지
 - Jenkins CICD 파이프라인을 통한 배포 자동화
+- 게시글 댓글 ERD 및 구조 최적화(자기 참조로 무한 댓글 가능)
 
 ## 향후 개선 및 계획
 - 검색 API에 AI 추천 기능을 추가하여 사용자 경험을 개선할 계획.
