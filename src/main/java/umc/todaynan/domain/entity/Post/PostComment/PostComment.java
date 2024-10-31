@@ -43,9 +43,9 @@ public class PostComment extends DateBaseEntity {
     @JoinColumn(name = "parent_id")
     private PostComment parentComment;
 
-    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PostComment> childComments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "postComment", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "postComment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PostCommentLike> postCommentLikes = new ArrayList<>();
 }
