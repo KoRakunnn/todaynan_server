@@ -57,30 +57,6 @@ public class User extends DateBaseEntity {
     @OneToMany(mappedBy = "blockingUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UserBlocking> userBlockingList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blockedUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UserBlocking> userBlockedList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Chat> chatList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "sendUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ChatRoom> chatRoomSendList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "receiveUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ChatRoom> chatRoomReceiveList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Post> postList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostLike> postLikeList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostComment> postCommentList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostCommentLike> postCommentLikeList = new ArrayList<>();
-
     public void addPreferList(List<UserPrefer> userPreferList) {
         this.userPreferList.addAll(userPreferList);
     }

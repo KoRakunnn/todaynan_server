@@ -23,6 +23,7 @@ import umc.todaynan.web.dto.PostDTO.PostRequestDTO;
 import umc.todaynan.web.dto.PostDTO.PostResponseDTO;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,18 +32,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class PostCommandService implements PostCommandServiceImpl{
-    @Autowired
     private final PostRepository postRepository;
-    @Autowired
     private final UserRepository userRepository;
-    @Autowired
     private final PostLikeRepository postLikeRepository;
-    @Autowired
-    private final PostCommentCommandService postCommentCommandService;
-    @Autowired
     private final TokenService tokenService;
-    @Autowired
-    private PostCommentLikeRepository postCommentLikeRepository;
 
     /*
      * 게시글 생성 API
@@ -116,25 +109,9 @@ public class PostCommandService implements PostCommandServiceImpl{
     @Override
     public PostResponseDTO.PostDetailResultDTO getPostDetail(Long post_id, HttpServletRequest httpServletRequest){
         Post post = postRepository.findById(post_id).orElseThrow(() -> new PostNotFoundException("post not found"));
-        Integer post_like_cnt = post.getPostLikeList().size();
-        List<PostComment> postCommentList = post.getPostCommentList();
-        List<PostCommentListDTO> post_comments = postCommentList.stream()
-                .map(postComment -> new PostCommentListDTO(
-                        postComment.getId(),
-                        postComment.getUser().getNickName(),
-                        postComment.getUser().getMyPet(),
-                        postComment.getComment(),
-                        postComment.getPostCommentLikes().size(),
-                        postComment.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")),
-                        postComment.getBundleId(),
-                        postComment.getDepth(),
-                        postComment.getParentComment() != null ? postComment.getParentComment().getId() : null)
-                )
-                .collect(Collectors.toList());
+        Integer post_like_cnt = post.getPostLikeList().size();;
 
-        PostResponseDTO.PostDetailResultDTO postDetailResultDTO = toPostDetailResultDTO(post, post_like_cnt.longValue(), post_comments);
-        postDetailResultDTO.setCreatedAt(post.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")));
-        return postDetailResultDTO;
+        return toPostDetailResultDTO(post, post_like_cnt.longValue());
     }
 
     public User findUser(HttpServletRequest httpServletRequest){
@@ -157,7 +134,10 @@ public class PostCommandService implements PostCommandServiceImpl{
                 .build();
     }
 
-    public static PostResponseDTO.PostDetailResultDTO toPostDetailResultDTO(Post post, Long post_cnt, List<PostCommentListDTO> post_comments) {
+    public static PostResponseDTO.PostDetailResultDTO toPostDetailResultDTO(Post post, Long post_cnt) {
+        List<PostResponseDTO.PostDetailCommentResultDTO> postDetailCommentResultDTO
+                = toPostDetailCommentResultDTO(post.getPostCommentList(), 0L);
+
         return PostResponseDTO.PostDetailResultDTO.builder()
                 .post_id(post.getId())
                 .nick_name(post.getUser().getNickName())
@@ -165,23 +145,29 @@ public class PostCommandService implements PostCommandServiceImpl{
                 .title(post.getTitle())
                 .content(post.getContent())
                 .post_like_cnt(post_cnt)
-                .postCommentList(post_comments)
+                .postCommentList(postDetailCommentResultDTO)
                 .build();
     }
 
-    @Builder
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class PostCommentListDTO{
-        private Long post_comment_id;
-        private String nick_name;
-        private MyPet myPet;
-        private String content;
-        private Integer post_comment_like_cnt;
-        private String createdAt;
-        private Long bundleId;
-        private Long depth;
-        private Long parentId;
+    public static List<PostResponseDTO.PostDetailCommentResultDTO> toPostDetailCommentResultDTO(List<PostComment> postCommentList, Long depth) {
+
+        return postCommentList.stream()
+                .filter(postComment -> postComment.getDepth().equals(depth))
+                .map(postComment -> {
+                    List<PostResponseDTO.PostDetailCommentResultDTO> childCommentsDTO =
+                            postComment.getChildComments() != null
+                                    ? toPostDetailCommentResultDTO(postComment.getChildComments(), depth + 1)
+                                    : new ArrayList<>();
+
+                    return PostResponseDTO.PostDetailCommentResultDTO.builder()
+                            .comment_id(postComment.getId())
+                            .postChildList(childCommentsDTO)
+                            .comment_like_cnt((long) postComment.getPostCommentLikes().size())
+                            .content(postComment.getComment())
+                            .myPet(postComment.getUser().getMyPet())
+                            .nick_name(postComment.getUser().getNickName())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

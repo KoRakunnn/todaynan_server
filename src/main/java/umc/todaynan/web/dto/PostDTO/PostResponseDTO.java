@@ -93,9 +93,22 @@ public class PostResponseDTO {
         private String title;
         private String content;
         private Long post_like_cnt;
-        private String createdAt;
-        private List<PostCommandService.PostCommentListDTO> postCommentList;
+        private List<PostDetailCommentResultDTO> postCommentList;
+    }
 
+    @Builder
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PostDetailCommentResultDTO {
+        private Long comment_id;
+        private String nick_name;
+        private MyPet myPet;
+        private String title;
+        private String content;
+        private Long comment_like_cnt;
+        private List<PostDetailCommentResultDTO> postChildList;
     }
 
     @Builder
