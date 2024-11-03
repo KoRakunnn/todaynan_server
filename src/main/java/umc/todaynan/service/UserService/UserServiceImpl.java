@@ -5,29 +5,33 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import umc.todaynan.apiPayload.code.status.ErrorStatus;
 import umc.todaynan.apiPayload.exception.GeneralException;
 import umc.todaynan.apiPayload.exception.UserNotFoundException;
-import umc.todaynan.apiPayload.exception.handler.PreferCategoryHandler;
 import umc.todaynan.apiPayload.exception.handler.UserHandler;
+import umc.todaynan.converter.PostCommentConverter;
+import umc.todaynan.converter.PostConverter;
 import umc.todaynan.converter.UserConverter;
 import umc.todaynan.converter.UserPreferConverter;
-import umc.todaynan.domain.entity.Post.Post.Post;
+import umc.todaynan.domain.entity.Post.PostComment.PostComment;
 import umc.todaynan.domain.entity.RefreshToken;
 import umc.todaynan.domain.entity.User.User.User;
+import umc.todaynan.domain.entity.User.UserBlocking.UserBlocking;
 import umc.todaynan.domain.entity.User.UserLike.UserLike;
 import umc.todaynan.domain.entity.User.UserPrefer.PreferCategory;
 import umc.todaynan.domain.entity.User.UserPrefer.UserPrefer;
 import umc.todaynan.domain.enums.LoginType;
 import umc.todaynan.oauth2.Token;
 import umc.todaynan.oauth2.TokenService;
-import umc.todaynan.oauth2.user.ProviderUser;
 import umc.todaynan.repository.*;
+import umc.todaynan.repository.QueryDsl.UserBlockingQueryDslRepository;
+import umc.todaynan.repository.QueryDsl.UserPreferQueryDslRepository;
+import umc.todaynan.service.TokenService.GoogleTokenService;
+import umc.todaynan.utils.ParseHeader;
+import umc.todaynan.web.dto.PostDTO.PostResponseDTO;
 import umc.todaynan.web.dto.UserDTO.UserRequestDTO;
 import umc.todaynan.web.dto.UserDTO.UserResponseDTO;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +39,6 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -48,51 +51,50 @@ public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final UserLikeRepository userLikeRepository;
     private final UserPreferRepository userPreferRepository;
-    private final PostCommentRepository postCommentRepository;
-    private final PostRepository postRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserPreferQueryDslRepository userPreferQueryDslRepository;
+    private final UserBlockingQueryDslRepository userBlockingQueryDslRepository;
+    private final UserBlockingRepository userBlockingRepository;
+    private final PostCommentRepository postCommentRepository;
 
     private final TokenService tokenService;
     private final UserConverter userConverter;
+    private final PostConverter postConverter;
+
+    private final ParseHeader parseHeader;
+    private final GoogleTokenService googleTokenService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Transactional
     @Override
-    public User join(String registrationId, ProviderUser providerUser){
-
-        User user = User.builder()
-                .loginType(LoginType.valueOf(registrationId))
-                .nickName(providerUser.getUsername())
-                .email(providerUser.getEmail())
-                .build();
-
-        //중복 회원 가입 방지
-        if(userRepository.existsByEmail(user.getEmail())){
-            return null;
-        }
-        else{
-            return userRepository.save(user);
-        }
-    }
-    @Transactional
-    @Override
-    public User signupUser(UserRequestDTO.JoinUserRequestDTO joinUserDTO, String email, LoginType loginType) {
+    public UserResponseDTO.JoinResponseDTO signupUser(
+            UserRequestDTO.JoinUserRequestDTO joinUserDTO,
+            LoginType loginType,
+            String accessToken
+    ) {
+        String email = getEmailByLoginType(loginType, accessToken);
         if (userRepository.existsByEmail(email)) {
             throw new GeneralException(ErrorStatus.USER_EXIST);
         }
         User newUser = UserConverter.toUserDTO(joinUserDTO, email, loginType);
 
         List<PreferCategory> preferCategoryList = preferCategoryRepository.findAllById(joinUserDTO.getPreferCategory());
-        List<UserPrefer> userPreferList = UserPreferConverter.toUserPreferCategoryList(preferCategoryList);
+        List<UserPrefer> userPreferList = UserPreferConverter.toUserPreferCategoryList(preferCategoryList, newUser);
 
-        userPreferList.forEach(userPrefer -> {userPrefer.setUser(newUser);});
-        return userRepository.save(newUser);
+        newUser.addPreferList(userPreferList);
+
+        Token token = tokenService.generateToken(newUser.getEmail(), "USER");
+        userRepository.save(newUser);
+        return userConverter.toJoinResponseDTO(newUser, token);
     }
 
     @Override
-    public Boolean verifyNickName(String nickName) {
-        return userRepository.existsByNickName(nickName);
+    public Void verifyNickName(String nickName) {
+        if (userRepository.existsByNickName(nickName)) {
+            throw new GeneralException(ErrorStatus.USER_NICKNAME_EXIST);
+        }
+        return null;
     }
 
     @Override
@@ -109,7 +111,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserResponseDTO.LoginResponseDTO loginUser(String email) {
+    public UserResponseDTO.LoginResponseDTO loginUser(
+            LoginType loginType,
+            String accessToken
+    ) {
+        String email = getEmailByLoginType(loginType, accessToken);
         if(userRepository.existsByEmail(email)) { //이미 존재
             Optional<User> user = userRepository.findByEmail(email);
             Token newToken = tokenService.generateToken(user.get().getEmail(), "USER");
@@ -123,7 +129,7 @@ public class UserServiceImpl implements UserService{
             Date date = tokenService.getExpiration(newToken.getAccessToken());
             LocalDateTime expiration = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 
-            return userConverter.toLoginResponseDTO(user.get(), newToken,expiration);
+            return userConverter.toLoginResponseDTO(user.get(), newToken, expiration);
         }
         else{   //존재 X
             return null;
@@ -193,60 +199,86 @@ public class UserServiceImpl implements UserService{
 
     @Transactional
     @Override
-    public void changeNickNameByUserId(long userId, UserRequestDTO.UserGeneralRequestDTO newNickname) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("해당 학번의 학생을 찾지 못했습니다.")
-        );
+    public UserResponseDTO.UserModifyDTO changeNickNameByUserId(HttpServletRequest request, UserRequestDTO.UserGeneralRequestDTO newNickname) {
+        User user = parseHeader.parseHeaderToUser(request);
         user.setNickName(newNickname.getRequest());
-        log.info("[UserService - changeNickNameByUserId] user : {}", user.getNickName());
         userRepository.save(user);
-        log.info("[UserService - changeNickNameByUserId] {}번 유저의 닉네임이 {}로 변경되었습니다.", userId, newNickname);
+
+        return UserResponseDTO.UserModifyDTO.builder()
+                .message("닉네임 수정 완료")
+                .build();
     }
     @Transactional
     @Override
-    public void changeMyAddress(long userId, UserRequestDTO.UserGeneralRequestDTO newAddress) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("해당 학번의 학생을 찾지 못했습니다.")
-        );
+    public UserResponseDTO.UserModifyDTO changeMyAddress(HttpServletRequest request, UserRequestDTO.UserGeneralRequestDTO newAddress) {
+        User user = parseHeader.parseHeaderToUser(request);
         user.setAddress(newAddress.getRequest());
         userRepository.save(user);
-        log.info("[UserService - changeNickNameByUserId] {}번 유저의 주소가 {}로 변경되었습니다.", userId, newAddress);
+
+        return UserResponseDTO.UserModifyDTO.builder()
+                .message("주소 수정 완료")
+                .build();
     }
-    @Transactional
+
     @Override
-    public void userSignOut(long userId) {
-        try {
-            userRepository.deleteById(userId);
-            log.info("[UserService - userSignOut] {}번 유저의 삭제가 정상적으로 이루어졌습니다.", userId);
-        } catch (EmptyResultDataAccessException e) {
-            log.error("[UserService - userSignOut] {}번 유저가 존재하지 않습니다.", userId);
-            throw new UserNotFoundException("해당 id의 유저가 존재하지 않습니다.");
-        } catch (Exception e) {
-            log.error("[UserService - userSignOut] 사용자 삭제 중 오류 발생: {}", e.getMessage());
-            throw e;
+    public UserResponseDTO.UserModifyDTO changeMyInterset(HttpServletRequest request, List<Integer> Interests) {
+        User user = parseHeader.parseHeaderToUser(request);
+        userPreferQueryDslRepository.changePreferList(user.getId(), Interests);
+
+        return UserResponseDTO.UserModifyDTO.builder()
+                .message("관심사 변경 완료")
+                .build();
+    }
+
+    @Override
+    public UserResponseDTO.UserModifyDTO user1BlockUser2ByUserId(HttpServletRequest request, UserRequestDTO.UserGeneralRequestDTO userGeneralRequestDTO) {
+        User user = parseHeader.parseHeaderToUser(request);
+        Long userId2 = userBlockingQueryDslRepository.findUserIdByUserNickName(userGeneralRequestDTO.getRequest());
+        if (userId2 == null) {
+            throw new UserNotFoundException("해당 닉네임을 가진 학생이 없습니다.");
         }
+        userBlockingRepository.save(
+                UserBlocking.builder()
+                        .blockingUser(user)
+                        .blockedUser(
+                                userRepository.findById(userId2).orElseThrow(
+                                        () -> new UserNotFoundException("해당 ID를 가진 유저를 찾지 못했습니다.(차단당하는 사람의 ID)")
+                                )
+                        )
+                        .build()
+        );
+
+        return UserResponseDTO.UserModifyDTO.builder()
+                .message("사용자 차단 완료")
+                .build();
     }
+
     @Transactional
     @Override
-    public long findUserIdByEmail(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new UserNotFoundException("해당 이메일의 유저가 존재하지 않습니다")
-        );
-        return user.getId();
+    public UserResponseDTO.UserModifyDTO userSignOut(HttpServletRequest request) {
+        User user = parseHeader.parseHeaderToUser(request);
+        userRepository.deleteById(user.getId());
+
+        return UserResponseDTO.UserModifyDTO.builder()
+                .message("사용자 탈퇴 완료")
+                .build();
+    }
+    public PostResponseDTO.MyPostCommentListDTO getUserPostListByUserIdByUserIdAndComments(HttpServletRequest request, PageRequest pageRequest) {
+        User user = parseHeader.parseHeaderToUser(request);
+        List<PostComment> commentList = postCommentRepository.findAllByUserId(user.getId());
+        long total = commentList.size();
+        int start = (int) pageRequest.getOffset();
+        int end = Math.min((start + pageRequest.getPageSize()), commentList.size());
+        List<PostComment> pagedComment = commentList.subList(start, end);
+
+        return PostCommentConverter.toPostCommentListDTO(new PageImpl<>(pagedComment, pageRequest, total));
     }
 
-
-    public Page<Post> getUserPostListByUserIdByUserIdAndComments(long userId, PageRequest pageRequest) {
-        List<Long> postIdsByUserIdOnCommentComment = null;
-        List<Long> postIdsByUserIdOnComment = postCommentRepository.findPostIdsByUserId(userId);
-        Set<Long> merged = null;
-        merged.addAll(postIdsByUserIdOnComment);
-        List<Post> posts = postRepository.findAllById(merged);
-        long total = posts.size();
-        int start = (int) pageRequest.getOffset();
-        int end = Math.min((start + pageRequest.getPageSize()), posts.size());
-        List<Post> pagedPosts = posts.subList(start, end);
-
-        return new PageImpl<>(pagedPosts, pageRequest, total);
+    public String getEmailByLoginType(LoginType loginType, String accessToken) {
+        return switch (loginType) {
+            case GOOGLE ->  googleTokenService.verifyAccessToken(accessToken).getEmail();
+            case NAVER -> null;
+            default -> null;
+        };
     }
 }

@@ -1,6 +1,7 @@
 package umc.todaynan.converter;
 
 import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
 import umc.todaynan.domain.entity.Post.Post.Post;
 import umc.todaynan.domain.entity.Post.PostComment.PostComment;
 import umc.todaynan.domain.entity.Post.PostLike.PostLike;
@@ -11,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class PostConverter {
 
     public static Post toPost(PostRequestDTO.CreatePostDTO request) {
@@ -49,7 +51,7 @@ public class PostConverter {
                 .build();
     }
 
-    public static PostResponseDTO.PostListDTO toPostListDTO(Page<Post> postList) {
+    public PostResponseDTO.PostListDTO toPostListDTO(Page<Post> postList) {
         List<PostResponseDTO.PostDTO> postDTOList = postList.stream()
                 .map(PostConverter::toPostDTO).collect(Collectors.toList());
 

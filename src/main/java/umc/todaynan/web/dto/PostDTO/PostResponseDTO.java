@@ -129,5 +129,31 @@ public class PostResponseDTO {
         private Long post_comment_id;
         private Long user_id;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MyPostCommentListDTO {
+        List<PostCommentDTO> postCommentList;
+        Integer listSize;
+        Integer totalPage;
+        Long totalElements;
+        Boolean isFirst;
+        Boolean isLast;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PostCommentDTO{
+        Long postId;
+        Long userId;
+        String content;
+        Integer commentLike;
+        String createdAt;
+    }
+
 }
 

@@ -41,35 +41,14 @@ public class PostRestController {
     private final PostCommandService postCommandService;
     private final PostCommentCommandService postCommentCommandService;
     private final PostQueryService postQueryService;
-    private final UserRepository userRepository;
-    private final TokenService tokenService;
-
-    public String getMiddleAddress(User user) {
-        String address = user.getAddress();
-        String[] parts = address.split(" ");
-        return parts[1];
-    }
-
     @GetMapping("/employ")
     @Operation(summary = "구인 게시판 전체 검색",description = "구인 게시판 게시들의 목록을 조회하는 API이며, 페이징을 포함합니다. query String 으로 page를 주세요")
     public ApiResponse<PostResponseDTO.PostListDTO> employPostList(
             HttpServletRequest request,
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page
-    ){
-        String givenToken = tokenService.getJwtFromHeader(request);
-        String email = tokenService.getUid(givenToken);
-
-        Optional<User> user = userRepository.findByEmail(email);
-
-        if (user.isPresent()) {
-            String middleAddress = getMiddleAddress(user.get());
-
-            Page<Post> employPostPage = postQueryService.getEmployPostList(page-1, middleAddress);
-            return ApiResponse.onSuccess(PostConverter.toPostListDTO(employPostPage));
-        }else {
-            return ApiResponse.onFailure(ErrorStatus.USER_NOT_EXIST.getCode(), ErrorStatus.USER_NOT_EXIST.getMessage(), null);
-        }
+    ) {
+        return ApiResponse.onSuccess(postQueryService.getEmployPostList(request, page));
     }
 
     @GetMapping("/chat")
@@ -79,19 +58,7 @@ public class PostRestController {
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page
     ){
-        String givenToken = tokenService.getJwtFromHeader(request);
-        String email = tokenService.getUid(givenToken);
-
-        Optional<User> user = userRepository.findByEmail(email);
-
-        if (user.isPresent()) {
-            String middleAddress = getMiddleAddress(user.get());
-
-            Page<Post> chatPostPage = postQueryService.getChatPostList(page-1, middleAddress);
-            return ApiResponse.onSuccess(PostConverter.toPostListDTO(chatPostPage));
-        }else {
-            return ApiResponse.onFailure(ErrorStatus.USER_NOT_EXIST.getCode(), ErrorStatus.USER_NOT_EXIST.getMessage(), null);
-        }
+        return ApiResponse.onSuccess(postQueryService.getChatPostList(request, page));
     }
 
     @GetMapping("/suggest")
@@ -102,16 +69,7 @@ public class PostRestController {
             @Parameter(description = "검색 지역, default: 전체")
             @RequestParam(defaultValue = "전체") String address
     ){
-        String middleAddress = "";
-        if(address.equals("전체")){
-            middleAddress = "전체";
-        } else {
-            String[] parts = address.split(" ");
-            middleAddress = parts[1];
-        }
-
-        Page<Post> suggestPostPage = postQueryService.getSuggestPostList(page-1, middleAddress);
-        return ApiResponse.onSuccess(PostConverter.toPostListDTO(suggestPostPage));
+        return ApiResponse.onSuccess(postQueryService.getSuggestPostList(page, address));
     }
 
     @GetMapping("/hot")
@@ -120,9 +78,7 @@ public class PostRestController {
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page
     ){
-
-        Page<Post> hotPostPage = postQueryService.getHotPostList(page-1);
-        return ApiResponse.onSuccess(PostConverter.toPostListDTO(hotPostPage));
+        return ApiResponse.onSuccess(postQueryService.getHotPostList(page));
     }
     //
     @Operation(summary = "게시글 작성 API",description = "게시판에 유저가 게시글을 작성하는 API입니다")

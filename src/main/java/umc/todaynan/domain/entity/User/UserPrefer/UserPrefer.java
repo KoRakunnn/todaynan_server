@@ -28,16 +28,4 @@ public class UserPrefer extends DateBaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public void setUser(User user){
-        if(this.user != null)
-            user.getUserPreferList().remove(this);
-        this.user = user;
-
-        logger.debug("UserPrefer aaaa: {}", user.getUserPreferList());
-        user.getUserPreferList().add(this);
-    }
-
-    public void setPreferCategory(PreferCategory preferCategory){
-        this.preferCategory = preferCategory;
-    }
 }

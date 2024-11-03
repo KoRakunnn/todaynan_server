@@ -115,11 +115,9 @@ public class PostCommandService implements PostCommandServiceImpl{
      * */
     @Override
     public PostResponseDTO.PostDetailResultDTO getPostDetail(Long post_id, HttpServletRequest httpServletRequest){
-        User user = findUser(httpServletRequest);
-//        Post post = findPost(post_id, user);
         Post post = postRepository.findById(post_id).orElseThrow(() -> new PostNotFoundException("post not found"));
-        Long post_like_cnt = postLikeRepository.countByPostId(post_id);
-        List<PostComment> postCommentList = postCommentCommandService.getPostCommentList(post_id, httpServletRequest);
+        Integer post_like_cnt = post.getPostLikeList().size();
+        List<PostComment> postCommentList = post.getPostCommentList();
         List<PostCommentListDTO> post_comments = postCommentList.stream()
                 .map(postComment -> new PostCommentListDTO(
                         postComment.getId(),
@@ -134,7 +132,7 @@ public class PostCommandService implements PostCommandServiceImpl{
                 )
                 .collect(Collectors.toList());
 
-        PostResponseDTO.PostDetailResultDTO postDetailResultDTO = toPostDetailResultDTO(post, post_like_cnt, post_comments);
+        PostResponseDTO.PostDetailResultDTO postDetailResultDTO = toPostDetailResultDTO(post, post_like_cnt.longValue(), post_comments);
         postDetailResultDTO.setCreatedAt(post.getCreatedAt().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")));
         return postDetailResultDTO;
     }

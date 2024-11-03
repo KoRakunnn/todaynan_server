@@ -1,5 +1,6 @@
 package umc.todaynan.service.ChatService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -8,16 +9,17 @@ import umc.todaynan.domain.entity.Chat.Chat;
 import umc.todaynan.domain.entity.Chat.ChatRoom;
 import umc.todaynan.domain.entity.User.User.User;
 import umc.todaynan.web.dto.ChatDTO.ChatRequestDTO;
+import umc.todaynan.web.dto.ChatDTO.ChatResponseDTO;
 
 import java.util.List;
 
 public interface ChatCommandService {
 
-    Chat createChat(ChatRequestDTO.CreateChatDTO request, String userEmail);
+    ChatResponseDTO.CreateChatDTO createChat(HttpServletRequest request, ChatRequestDTO.CreateChatDTO createChatDTO);
 
     ChatRoom createChatRoom(User sendUser, Long receiveUserId);
 
-    Page<Chat> getChatList(Integer page, Long chatRoomId);
+    ChatResponseDTO.ChatListDTO getChatList(HttpServletRequest request, Integer page, Long chatRoomId);
 
-    List<ChatRoom> getChatRoomList(User user);
+    ChatResponseDTO.ChatRoomListDTO getChatRoomList(HttpServletRequest request);
 }

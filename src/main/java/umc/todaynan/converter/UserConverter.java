@@ -48,7 +48,9 @@ public class UserConverter {
                 .build();
     }
 
-    public static User toUserDTO(UserRequestDTO.JoinUserRequestDTO request, String email, LoginType loginType){
+    public static User toUserDTO(UserRequestDTO.JoinUserRequestDTO request,
+                                 String email,
+                                 LoginType loginType){
         return User.builder()
                 .nickName(request.getNickName())
                 .email(email)

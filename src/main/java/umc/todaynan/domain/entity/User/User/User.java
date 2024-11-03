@@ -81,4 +81,8 @@ public class User extends DateBaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PostCommentLike> postCommentLikeList = new ArrayList<>();
 
+    public void addPreferList(List<UserPrefer> userPreferList) {
+        this.userPreferList.addAll(userPreferList);
+    }
+
 }

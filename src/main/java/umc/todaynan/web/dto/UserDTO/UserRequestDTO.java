@@ -3,8 +3,10 @@ package umc.todaynan.web.dto.UserDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import umc.todaynan.domain.enums.LoginType;
 import umc.todaynan.domain.enums.MyPet;
 import umc.todaynan.domain.enums.PlaceCategory;
@@ -38,6 +40,8 @@ public class UserRequestDTO {
 
     @Builder
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class UserGeneralRequestDTO {
         String request;
     }

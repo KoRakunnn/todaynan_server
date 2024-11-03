@@ -1,0 +1,41 @@
+= 사용자 API 문서
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels:2
+:sectlinks:
+
+== 개요
+
+이 문서는 사용자 관련 API를 설명합니다.
+
+== 엔드포인트
+
+=== User
+
+==== Sign Up
+
+==== 요청
+
+include::{snippets}/signup-user/http-request.adoc[]
+include::{snippets}/signup-user/request-fields.adoc[]
+
+==== 응답
+
+include::{snippets}/signup-user/http-response.adoc[]
+include::{snippets}/signup-user/response-fields.adoc[]
+
+==== NickName
+
+==== 요청
+
+include::{snippets}/nickname-user/http-request.adoc[]
+include::{snippets}/nickname-user/request-fields.adoc[]
+
+==== 응답
+
+include::{snippets}/nickname-user/http-response.adoc[]
+include::{snippets}/nickname-user/response-fields.adoc[]
+
+

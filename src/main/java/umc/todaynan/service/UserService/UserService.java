@@ -1,32 +1,25 @@
 package umc.todaynan.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import umc.todaynan.domain.entity.Post.Post.Post;
 import umc.todaynan.domain.entity.User.User.User;
 import umc.todaynan.domain.entity.User.UserLike.UserLike;
 import umc.todaynan.domain.enums.LoginType;
-import umc.todaynan.oauth2.user.ProviderUser;
+import umc.todaynan.web.dto.PostDTO.PostResponseDTO;
 import umc.todaynan.web.dto.UserDTO.UserRequestDTO;
 import umc.todaynan.web.dto.UserDTO.UserResponseDTO;
 
 import java.util.List;
 
 public interface UserService {
-    /**
-     * Oauth2 관련 join Service
-     * 사용 X, 유지만...
-     */
-    User join(String registrationId, ProviderUser providerUser);
 
     /**
      * User 회원가입, 로그인 관련 Service
      */
-    User signupUser(UserRequestDTO.JoinUserRequestDTO joinUserDTO, String email, LoginType loginType);
-    Boolean verifyNickName(String nickName);
+    UserResponseDTO.JoinResponseDTO signupUser(UserRequestDTO.JoinUserRequestDTO joinUserDTO, LoginType loginType, String accessToken);
+    Void verifyNickName(String nickName);
     UserResponseDTO.AutoLoginResponseDTO autoLoginUser(HttpServletRequest httpServletRequest);
-    UserResponseDTO.LoginResponseDTO loginUser(String email);
+    UserResponseDTO.LoginResponseDTO loginUser(LoginType loginType, String accessToken);
 
     /**
      * User 좋아요 관련 Service
@@ -39,10 +32,11 @@ public interface UserService {
      * User 정보를 기반으로 User Prefer 목록 가져오는 Service
      */
     List<String> getPreferCategoryItems(User user);
+    UserResponseDTO.UserModifyDTO changeNickNameByUserId(HttpServletRequest httpServletRequest, UserRequestDTO.UserGeneralRequestDTO newNickname);
+    UserResponseDTO.UserModifyDTO changeMyAddress(HttpServletRequest httpServletRequest, UserRequestDTO.UserGeneralRequestDTO newAddress);
+    UserResponseDTO.UserModifyDTO changeMyInterset(HttpServletRequest request, List<Integer> Interests);
+    UserResponseDTO.UserModifyDTO user1BlockUser2ByUserId(HttpServletRequest request, UserRequestDTO.UserGeneralRequestDTO userGeneralRequestDTO);
+    UserResponseDTO.UserModifyDTO userSignOut(HttpServletRequest request);
 
-    void changeNickNameByUserId(long userId, UserRequestDTO.UserGeneralRequestDTO newNickname);
-    void changeMyAddress(long userId, UserRequestDTO.UserGeneralRequestDTO newAddress);
-    void userSignOut(long userId);
-    long findUserIdByEmail(String email);
-    Page<Post> getUserPostListByUserIdByUserIdAndComments(long userId, PageRequest pageRequest);
+    PostResponseDTO.MyPostCommentListDTO getUserPostListByUserIdByUserIdAndComments(HttpServletRequest request, PageRequest pageRequest);
 }

@@ -6,33 +6,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-import umc.todaynan.apiPayload.ApiResponse;
-import umc.todaynan.apiPayload.code.status.ErrorStatus;
 import umc.todaynan.converter.UserConverter;
 import umc.todaynan.oauth2.JwtAuthFilter;
-import umc.todaynan.oauth2.OAuth2SuccessHandler;
 import umc.todaynan.oauth2.TokenService;
 import umc.todaynan.oauth2.authority.CustomAuthorityMapper;
 import umc.todaynan.repository.UserRepository;
-import umc.todaynan.service.UserService.CustomOAuth2UserService;
-import umc.todaynan.service.UserService.CustomOidcUserService;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 @Configuration
 @RequiredArgsConstructor
