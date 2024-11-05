@@ -3,6 +3,7 @@ package umc.todaynan.repository.QueryDsl;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import umc.todaynan.domain.entity.User.User.QUser;
@@ -30,6 +31,7 @@ public class UserPreferQueryDslRepository {
         this.query = new JPAQueryFactory(em);
     }
 
+    @Modifying
     @Transactional
     public void changePreferList(long userId, List<Integer> interests) {
         query.delete(userPrefer)

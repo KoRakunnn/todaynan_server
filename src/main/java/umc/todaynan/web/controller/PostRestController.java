@@ -5,14 +5,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import umc.todaynan.apiPayload.ApiResponse;
-import umc.todaynan.apiPayload.code.status.ErrorStatus;
 import umc.todaynan.apiPayload.code.status.SuccessStatus;
 import umc.todaynan.converter.PostCommentConverter;
 import umc.todaynan.converter.PostConverter;
@@ -20,27 +16,20 @@ import umc.todaynan.domain.entity.Post.Post.Post;
 import umc.todaynan.domain.entity.Post.PostComment.PostComment;
 import umc.todaynan.domain.entity.Post.PostCommentLike.PostCommentLike;
 import umc.todaynan.domain.entity.Post.PostLike.PostLike;
-import umc.todaynan.domain.entity.User.User.User;
-import umc.todaynan.domain.enums.LoginType;
-import umc.todaynan.oauth2.TokenService;
-import umc.todaynan.repository.UserRepository;
 import umc.todaynan.service.PostCommentService.PostCommentCommandService;
-import umc.todaynan.service.PostService.PostCommandService;
-import umc.todaynan.service.PostService.PostQueryService;
+import umc.todaynan.service.PostService.PostService;
+import umc.todaynan.service.PostService.PostServiceImpl;
 import umc.todaynan.web.dto.PostDTO.PostRequestDTO;
 import umc.todaynan.web.dto.PostDTO.PostResponseDTO;
-
-import java.util.List;
-import java.util.Optional;
 
 @Validated
 @RestController
 @RequestMapping("/post")
 @RequiredArgsConstructor
 public class PostRestController {
-    private final PostCommandService postCommandService;
+    private final PostService postService;
     private final PostCommentCommandService postCommentCommandService;
-    private final PostQueryService postQueryService;
+    private final PostConverter postConverter;
     @GetMapping("/employ")
     @Operation(summary = "구인 게시판 전체 검색",description = "구인 게시판 게시들의 목록을 조회하는 API이며, 페이징을 포함합니다. query String 으로 page를 주세요")
     public ApiResponse<PostResponseDTO.PostListDTO> employPostList(
@@ -48,7 +37,7 @@ public class PostRestController {
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page
     ) {
-        return ApiResponse.onSuccess(postQueryService.getEmployPostList(request, page));
+        return ApiResponse.onSuccess(postService.getEmployPostList(request, page));
     }
 
     @GetMapping("/chat")
@@ -58,7 +47,7 @@ public class PostRestController {
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page
     ){
-        return ApiResponse.onSuccess(postQueryService.getChatPostList(request, page));
+        return ApiResponse.onSuccess(postService.getChatPostList(request, page));
     }
 
     @GetMapping("/suggest")
@@ -69,7 +58,7 @@ public class PostRestController {
             @Parameter(description = "검색 지역, default: 전체")
             @RequestParam(defaultValue = "전체") String address
     ){
-        return ApiResponse.onSuccess(postQueryService.getSuggestPostList(page, address));
+        return ApiResponse.onSuccess(postService.getSuggestPostList(page, address));
     }
 
     @GetMapping("/hot")
@@ -78,7 +67,7 @@ public class PostRestController {
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page
     ){
-        return ApiResponse.onSuccess(postQueryService.getHotPostList(page));
+        return ApiResponse.onSuccess(postService.getHotPostList(page));
     }
     //
     @Operation(summary = "게시글 작성 API",description = "게시판에 유저가 게시글을 작성하는 API입니다")
@@ -88,8 +77,7 @@ public class PostRestController {
     @PostMapping("")
     public ApiResponse<PostResponseDTO.CreatePostResultDTO> createPost(@RequestBody PostRequestDTO.CreatePostDTO request,
                                                                    HttpServletRequest httpServletRequest){
-        Post post = postCommandService.createPost(request, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_CREATED, PostConverter.toCreateResultDTO(post));
+        return ApiResponse.of(SuccessStatus.POST_CREATED, postService.createPost(request, httpServletRequest));
     }
 
     @Operation(summary = "게시글 수정 API",description = "유저가 작성한 게시글을 수정하는 API입니다")
@@ -103,8 +91,7 @@ public class PostRestController {
     public ApiResponse<PostResponseDTO.UpdatePostResultDTO> updatePost(@PathVariable("post_id") Long post_id,
                                                                    @RequestBody PostRequestDTO.UpdatePostDTO request,
                                                                    HttpServletRequest httpServletRequest){
-        Post post = postCommandService.updatePost(post_id, request, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_UPDATED, PostConverter.toUpdateResultDTO(post));
+        return ApiResponse.of(SuccessStatus.POST_UPDATED, postService.updatePost(post_id, request, httpServletRequest));
 
     }
 
@@ -118,11 +105,7 @@ public class PostRestController {
     @DeleteMapping("/{post_id}")
     public ApiResponse<String> deletePost(@PathVariable("post_id") Long post_id,
                                           HttpServletRequest httpServletRequest){
-        Boolean isSuccess = postCommandService.deletePost(post_id, httpServletRequest);
-        if(isSuccess){
-            return ApiResponse.of(SuccessStatus.POST_DELETED, "게시글이 성공적으로 삭제되었습니다");
-        }
-        return null;
+        return ApiResponse.of(SuccessStatus.POST_DELETED, postService.deletePost(post_id, httpServletRequest));
     }
 
     @Operation(summary = "게시글 좋아요 API",description = "게시판에 유저가 게시글을 작성하는 API입니다")
@@ -134,10 +117,8 @@ public class PostRestController {
     })
     @PostMapping("/like/{post_id}")
     public ApiResponse<PostResponseDTO.LikePostResultDTO> likePost(@PathVariable("post_id") Long post_id,
-//                                                               @RequestBody PostRequestDTO.LikeDTO request,
                                                                HttpServletRequest httpServletRequest){
-        PostLike postLike = postCommandService.likePost(post_id, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_LIKE_SUCCESS, PostConverter.toLikeResultDTO(postLike));
+        return ApiResponse.of(SuccessStatus.POST_LIKE_SUCCESS, postService.likePost(post_id, httpServletRequest));
     }
 
     @Operation(summary = "댓글 작성 API",description = "유저가 댓글을 작성하는 API입니다")
@@ -152,8 +133,7 @@ public class PostRestController {
                                                                                      @RequestParam(name = "comment_id", required = false) Long comment_id,
                                                                                  @RequestBody PostRequestDTO.CreatePostCommentDTO request,
                                                                                  HttpServletRequest httpServletRequest){
-        PostComment postComment = postCommentCommandService.createComment(post_id, comment_id, request, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_COMMENT_CREATED, PostCommentConverter.toCreateResultDTO(postComment));
+        return ApiResponse.of(SuccessStatus.POST_COMMENT_CREATED, postCommentCommandService.createComment(post_id, comment_id, request, httpServletRequest));
     }
 
     @Operation(summary = "댓글 수정 API",description = "유저가 작성한 댓글을 수정하는 API입니다")
@@ -169,8 +149,7 @@ public class PostRestController {
                                                                                  @PathVariable("comment_id") Long comment_id,
                                                                                  @RequestBody PostRequestDTO.UpdatePostCommentDTO request,
                                                                                  HttpServletRequest httpServletRequest){
-        PostComment postComment = postCommentCommandService.updateComment(post_id, comment_id, request, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_COMMENT_UPDATED, PostCommentConverter.toUpdateResultDTO(postComment));
+        return ApiResponse.of(SuccessStatus.POST_COMMENT_UPDATED, postCommentCommandService.updateComment(post_id, comment_id, request, httpServletRequest));
     }
 
     @Operation(summary = "댓글 삭제 API",description = "유저가 댓글을 삭제하는 API입니다")
@@ -185,11 +164,7 @@ public class PostRestController {
     public ApiResponse<String> deletePostComment(@PathVariable("post_id") Long post_id,
                                                  @PathVariable("comment_id") Long comment_id,
                                                  HttpServletRequest httpServletRequest){
-        Boolean isSuccess = postCommentCommandService.deleteComment(post_id, comment_id, httpServletRequest);
-        if(isSuccess){
-            return ApiResponse.of(SuccessStatus.POST_COMMENT_DELETED, "댓글이 성공적으로 삭제되었습니다");
-        }
-        return null;
+            return ApiResponse.of(SuccessStatus.POST_COMMENT_DELETED, postCommentCommandService.deleteComment(post_id, comment_id, httpServletRequest));
     }
 
     @Operation(summary = "댓글 좋아요 API",description = "유저가 댓글에 좋아요를 누르는 API입니다")
@@ -204,8 +179,7 @@ public class PostRestController {
     public ApiResponse<PostResponseDTO.LikePostCommentResultDTO> likePostComment(@PathVariable("post_id") Long post_id,
                                                                              @PathVariable("comment_id") Long comment_id,
                                                                              HttpServletRequest httpServletRequest){
-        PostCommentLike postCommentLike = postCommentCommandService.likeComment(post_id, comment_id, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_COMMENT_LIKE_SUCCESS, PostCommentConverter.toLikeResultDTO(postCommentLike));
+        return ApiResponse.of(SuccessStatus.POST_COMMENT_LIKE_SUCCESS, postCommentCommandService.likeComment(post_id, comment_id, httpServletRequest));
     }
 
     @Operation(summary = "게시글 세부사항 조회 API",description = "게시글 클릭시 상세정보를 보여주는 API입니다")
@@ -218,8 +192,7 @@ public class PostRestController {
     @GetMapping("/detail/{post_id}")
     public ApiResponse<PostResponseDTO.PostDetailResultDTO> PostDetail(@PathVariable("post_id") Long post_id,
                                                                HttpServletRequest httpServletRequest){
-        PostResponseDTO.PostDetailResultDTO postDetail = postCommandService.getPostDetail(post_id, httpServletRequest);
-        return ApiResponse.of(SuccessStatus.POST_DETAIL_SUCCESS, postDetail);
+        return ApiResponse.of(SuccessStatus.POST_DETAIL_SUCCESS, postService.getPostDetail(post_id, httpServletRequest));
     }
 
 }

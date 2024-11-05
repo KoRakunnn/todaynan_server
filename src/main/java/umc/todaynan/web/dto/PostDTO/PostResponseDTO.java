@@ -1,14 +1,9 @@
 package umc.todaynan.web.dto.PostDTO;
 
 import lombok.*;
-import umc.todaynan.domain.entity.Post.Post.Post;
-import umc.todaynan.domain.entity.Post.PostComment.PostComment;
 import umc.todaynan.domain.enums.MyPet;
 import umc.todaynan.domain.enums.PostCategory;
-import umc.todaynan.service.PostService.PostCommandService;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class PostResponseDTO {
@@ -34,10 +29,8 @@ public class PostResponseDTO {
     @AllArgsConstructor
     public static class UpdatePostResultDTO{
         private Long post_id;
-        private Long user_id;
         private String title;
         private String content;
-        private PostCategory category;
 //        private String fieldTest = "test";
     }
 

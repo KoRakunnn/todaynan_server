@@ -46,7 +46,10 @@ public class UserRequestDTO {
         String request;
     }
 
+    @Builder
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class UserInterestRequestDTO {
         List<Integer> interestList;
     }

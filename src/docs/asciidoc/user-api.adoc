@@ -10,15 +10,15 @@
 
 이 문서는 사용자 관련 API를 설명합니다.
 
-== 엔드포인트
+== User
 
-=== User
-
-==== Sign Up
+=== 회원가입
 
 ==== 요청
 
 include::{snippets}/signup-user/http-request.adoc[]
+include::{snippets}/signup-user/request-headers.adoc[]
+include::{snippets}/signup-user/query-parameters.adoc[]
 include::{snippets}/signup-user/request-fields.adoc[]
 
 ==== 응답
@@ -26,16 +26,70 @@ include::{snippets}/signup-user/request-fields.adoc[]
 include::{snippets}/signup-user/http-response.adoc[]
 include::{snippets}/signup-user/response-fields.adoc[]
 
-==== NickName
+=== 자동 로그인
+
+==== 요청
+
+include::{snippets}/autologin-user/http-request.adoc[]
+include::{snippets}/autologin-user/query-parameters.adoc[]
+
+==== 응답
+
+include::{snippets}/autologin-user/http-response.adoc[]
+include::{snippets}/autologin-user/response-fields.adoc[]
+
+=== 닉네임 중복 확인
+
+==== 요청
+
+include::{snippets}/verify-user/http-request.adoc[]
+include::{snippets}/verify-user/path-parameters.adoc[]
+
+==== 응답
+
+include::{snippets}/verify-user/http-response.adoc[]
+include::{snippets}/verify-user/response-fields.adoc[]
+
+=== 닉네임 변경
 
 ==== 요청
 
 include::{snippets}/nickname-user/http-request.adoc[]
+include::{snippets}/nickname-user/request-headers.adoc[]
 include::{snippets}/nickname-user/request-fields.adoc[]
 
 ==== 응답
 
 include::{snippets}/nickname-user/http-response.adoc[]
 include::{snippets}/nickname-user/response-fields.adoc[]
+
+=== 주소 변경
+
+==== 요청
+
+include::{snippets}/address-user/http-request.adoc[]
+include::{snippets}/address-user/request-headers.adoc[]
+include::{snippets}/address-user/request-fields.adoc[]
+
+==== 응답
+
+include::{snippets}/address-user/http-response.adoc[]
+include::{snippets}/address-user/response-fields.adoc[]
+
+=== 관심사 변경
+
+==== 요청
+
+include::{snippets}/interest-user/http-request.adoc[]
+include::{snippets}/interest-user/request-headers.adoc[]
+include::{snippets}/interest-user/request-fields.adoc[]
+
+==== 응답
+
+include::{snippets}/interest-user/http-response.adoc[]
+include::{snippets}/interest-user/response-fields.adoc[]
+
+
+== Post
 
 

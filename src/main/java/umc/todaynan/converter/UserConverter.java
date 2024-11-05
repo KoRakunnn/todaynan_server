@@ -62,18 +62,18 @@ public class UserConverter {
                 .build();
     }
 
-    public UserResponseDTO.AutoLoginResponseDTO toAutoLoginResponseDTO(User user, Token token, LocalDateTime date) {
+    public UserResponseDTO.AutoLoginResponseDTO toAutoLoginResponseDTO(Long userId, Token token, LocalDateTime date) {
         return UserResponseDTO.AutoLoginResponseDTO.builder()
-                .user_id(user.getId())
+                .user_id(userId)
                 .accessToken(token.getAccessToken())
                 .refreshToken(token.getRefreshToken())
                 .expiration(date)
                 .build();
     }
 
-    public UserResponseDTO.LoginResponseDTO toLoginResponseDTO(User user, Token token, LocalDateTime date) {
+    public UserResponseDTO.LoginResponseDTO toLoginResponseDTO(Long userId, Token token, LocalDateTime date) {
         return UserResponseDTO.LoginResponseDTO.builder()
-                .user_id(user.getId())
+                .user_id(userId)
                 .accessToken(token.getAccessToken())
                 .refreshToken(token.getRefreshToken())
                 .expiration(date)

@@ -26,4 +26,14 @@ public class ParseHeader {
         if (user.isPresent()) return user.get();
         else throw new AuthenticationException(ErrorStatus.USER_ACCESS_TOKEN_NOT_VERITY);
     }
+
+    public Long parseHeaderToUserId(
+            HttpServletRequest request
+    ){
+        String givenToken = tokenService.getJwtFromHeader(request);
+        String email = tokenService.getUid(givenToken);
+        Optional<Long> userId = userRepository.findUserIdByEmail(email);
+        if (userId.isPresent()) return userId.get();
+        else throw new AuthenticationException(ErrorStatus.USER_ACCESS_TOKEN_NOT_VERITY);
+    }
 }

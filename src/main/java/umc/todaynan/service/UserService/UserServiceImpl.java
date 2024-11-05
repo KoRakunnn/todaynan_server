@@ -43,7 +43,7 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional(readOnly = false)
 public class UserServiceImpl implements UserService{
 
 
@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService{
 
     private final TokenService tokenService;
     private final UserConverter userConverter;
-    private final PostConverter postConverter;
+    private final PostCommentConverter postCommentConverter;
 
     private final ParseHeader parseHeader;
     private final GoogleTokenService googleTokenService;
@@ -101,13 +101,13 @@ public class UserServiceImpl implements UserService{
     public UserResponseDTO.AutoLoginResponseDTO autoLoginUser(HttpServletRequest httpServletRequest) {
         String givenToken = tokenService.getJwtFromHeader(httpServletRequest);
         String email = tokenService.getUid(givenToken);
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserHandler(ErrorStatus.USER_ERROR));
-        Token newToken = tokenService.generateToken(user.getEmail(), "USER");
+        Long userId = parseHeader.parseHeaderToUserId(httpServletRequest);
+        Token newToken = tokenService.generateToken(email, "USER");
 
         Date date = tokenService.getExpiration(newToken.getAccessToken());
         LocalDateTime expiration = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 
-        return userConverter.toAutoLoginResponseDTO(user, newToken,expiration);
+        return userConverter.toAutoLoginResponseDTO(userId, newToken,expiration);
     }
 
     @Override
@@ -117,8 +117,8 @@ public class UserServiceImpl implements UserService{
     ) {
         String email = getEmailByLoginType(loginType, accessToken);
         if(userRepository.existsByEmail(email)) { //이미 존재
-            Optional<User> user = userRepository.findByEmail(email);
-            Token newToken = tokenService.generateToken(user.get().getEmail(), "USER");
+            Optional<Long> userId = userRepository.findUserIdByEmail(email);
+            Token newToken = tokenService.generateToken(email, "USER");
 
             if(refreshTokenRepository.existsRefreshTokenByEmail(email)) {
                 RefreshToken existRefreshToken = refreshTokenRepository.findRefreshTokenByEmail(email);
@@ -129,7 +129,7 @@ public class UserServiceImpl implements UserService{
             Date date = tokenService.getExpiration(newToken.getAccessToken());
             LocalDateTime expiration = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 
-            return userConverter.toLoginResponseDTO(user.get(), newToken, expiration);
+            return userConverter.toLoginResponseDTO(userId.get(), newToken, expiration);
         }
         else{   //존재 X
             return null;
@@ -200,9 +200,8 @@ public class UserServiceImpl implements UserService{
     @Transactional
     @Override
     public UserResponseDTO.UserModifyDTO changeNickNameByUserId(HttpServletRequest request, UserRequestDTO.UserGeneralRequestDTO newNickname) {
-        User user = parseHeader.parseHeaderToUser(request);
-        user.setNickName(newNickname.getRequest());
-        userRepository.save(user);
+        Long userId = parseHeader.parseHeaderToUserId(request);
+        userRepository.updateNickNameById(userId, newNickname.getRequest());
 
         return UserResponseDTO.UserModifyDTO.builder()
                 .message("닉네임 수정 완료")
@@ -211,9 +210,8 @@ public class UserServiceImpl implements UserService{
     @Transactional
     @Override
     public UserResponseDTO.UserModifyDTO changeMyAddress(HttpServletRequest request, UserRequestDTO.UserGeneralRequestDTO newAddress) {
-        User user = parseHeader.parseHeaderToUser(request);
-        user.setAddress(newAddress.getRequest());
-        userRepository.save(user);
+        Long userId = parseHeader.parseHeaderToUserId(request);
+        userRepository.updateAddressById(userId, newAddress.getRequest());
 
         return UserResponseDTO.UserModifyDTO.builder()
                 .message("주소 수정 완료")
@@ -222,8 +220,8 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserResponseDTO.UserModifyDTO changeMyInterset(HttpServletRequest request, List<Integer> Interests) {
-        User user = parseHeader.parseHeaderToUser(request);
-        userPreferQueryDslRepository.changePreferList(user.getId(), Interests);
+        Long userId = parseHeader.parseHeaderToUserId(request);
+        userPreferQueryDslRepository.changePreferList(userId, Interests);
 
         return UserResponseDTO.UserModifyDTO.builder()
                 .message("관심사 변경 완료")
@@ -264,14 +262,14 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
     public PostResponseDTO.MyPostCommentListDTO getUserPostListByUserIdByUserIdAndComments(HttpServletRequest request, PageRequest pageRequest) {
-        User user = parseHeader.parseHeaderToUser(request);
-        List<PostComment> commentList = postCommentRepository.findAllByUserId(user.getId());
+        Long userId = parseHeader.parseHeaderToUserId(request);
+        List<PostComment> commentList = postCommentRepository.findAllByUserId(userId);
         long total = commentList.size();
         int start = (int) pageRequest.getOffset();
         int end = Math.min((start + pageRequest.getPageSize()), commentList.size());
         List<PostComment> pagedComment = commentList.subList(start, end);
 
-        return PostCommentConverter.toPostCommentListDTO(new PageImpl<>(pagedComment, pageRequest, total));
+        return postCommentConverter.toPostCommentListDTO(new PageImpl<>(pagedComment, pageRequest, total));
     }
 
     public String getEmailByLoginType(LoginType loginType, String accessToken) {

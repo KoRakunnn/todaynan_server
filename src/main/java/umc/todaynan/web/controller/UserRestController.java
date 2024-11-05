@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import umc.todaynan.apiPayload.ApiResponse;
 import umc.todaynan.apiPayload.code.status.SuccessStatus;
 import umc.todaynan.domain.enums.LoginType;
-import umc.todaynan.service.PostService.PostQueryService;
+import umc.todaynan.service.PostService.PostService;
 import umc.todaynan.service.UserService.UserService;
 import umc.todaynan.web.dto.PostDTO.PostResponseDTO;
 import umc.todaynan.web.dto.UserDTO.UserRequestDTO;
@@ -22,7 +22,7 @@ import umc.todaynan.web.dto.UserDTO.UserResponseDTO;
 @Slf4j
 public class UserRestController {
     private final UserService userService;
-    private final PostQueryService postQueryService;
+    private final PostService postService;
 
     @Operation(summary = "회원가입 API", description = "Social Access Token Authorization")
     @PostMapping("/signup")
@@ -82,7 +82,7 @@ public class UserRestController {
             HttpServletRequest request,
             @Parameter(description = "페이지 번호(1부터 시작), default: 1 / size = 10")
             @RequestParam(defaultValue = "1") Integer page) {
-        return ApiResponse.onSuccess(postQueryService.getUserPostListByUserId(request, page - 1));
+        return ApiResponse.onSuccess(postService.getUserPostListByUserId(request, page - 1));
     }
 
     @GetMapping("/postlist/comment")
